@@ -141,6 +141,7 @@ watch(
 						type="secondary"
 						icon="trash"
 						icon-size="medium"
+						data-test-id="clear-execution-data-button"
 						:class="$style.clearButton"
 						@click.stop="emit('clearExecutionData')"
 						>{{ locale.baseText('logs.overview.header.actions.clearExecution') }}</N8nButton
@@ -167,6 +168,7 @@ watch(
 			<template v-else>
 				<ExecutionSummary
 					v-if="execution"
+					data-test-id="logs-overview-status"
 					:class="$style.summary"
 					:status="execution.status"
 					:consumed-tokens="consumedTokens"
@@ -179,8 +181,8 @@ watch(
 				<div :class="$style.tree" v-bind="virtualList.containerProps">
 					<div v-bind="virtualList.wrapperProps.value" role="tree">
 						<LogsOverviewRow
-							v-for="{ data } of virtualList.list.value"
-							:key="data.id"
+							v-for="{ data, index } of virtualList.list.value"
+							:key="index"
 							:data="data"
 							:is-read-only="isReadOnly"
 							:is-selected="
