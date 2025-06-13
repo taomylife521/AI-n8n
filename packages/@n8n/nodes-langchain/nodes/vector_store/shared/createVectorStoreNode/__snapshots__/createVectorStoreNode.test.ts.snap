@@ -44,7 +44,7 @@ exports[`createVectorStoreNode retrieve mode supplies vector store as data 1`] =
 				const useReranker = parameters?.useReranker;
 				const inputs = [{ displayName: "Embedding", type: "ai_embedding", required: true, maxConnections: 1}]
 
-				if (['load', 'retrieve-as-tool'].includes(mode) && useReranker) {
+				if (['load', 'retrieve', 'retrieve-as-tool'].includes(mode) && useReranker) {
 					inputs.push({ displayName: "Reranker", type: "ai_reranker", required: true, maxConnections: 1})
 				}
 
@@ -78,6 +78,18 @@ exports[`createVectorStoreNode retrieve mode supplies vector store as data 1`] =
 			})($parameter)
 		}}",
   "properties": [
+    {
+      "default": "",
+      "displayName": "Tip: Get a feel for vector stores in n8n with our",
+      "name": "ragStarterCallout",
+      "type": "callout",
+      "typeOptions": {
+        "calloutAction": {
+          "label": "RAG starter template",
+          "type": "openRagStarterTemplate",
+        },
+      },
+    },
     {
       "default": "retrieve",
       "displayName": "Operation Mode",
@@ -246,6 +258,7 @@ exports[`createVectorStoreNode retrieve mode supplies vector store as data 1`] =
         "show": {
           "mode": [
             "load",
+            "retrieve",
             "retrieve-as-tool",
           ],
         },

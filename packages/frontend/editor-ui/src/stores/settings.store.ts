@@ -3,10 +3,11 @@ import Bowser from 'bowser';
 import type { IUserManagementSettings, FrontendSettings } from '@n8n/api-types';
 
 import * as eventsApi from '@n8n/rest-api-client/api/events';
-import * as ldapApi from '@/api/ldap';
-import * as settingsApi from '@/api/settings';
+import * as ldapApi from '@n8n/rest-api-client/api/ldap';
+import * as settingsApi from '@n8n/rest-api-client/api/settings';
+import * as promptsApi from '@n8n/rest-api-client/api/prompts';
 import { testHealthEndpoint } from '@/api/templates';
-import type { ILdapConfig } from '@/Interface';
+import type { LdapConfig } from '@n8n/rest-api-client/api/ldap';
 import {
 	INSECURE_CONNECTION_WARNING,
 	LOCAL_STORAGE_EXPERIMENTAL_MIN_ZOOM_NODE_SETTINGS_IN_CANVAS,
@@ -45,6 +46,7 @@ export const useSettingsStore = defineStore(STORES.SETTINGS, () => {
 	});
 	const ldap = ref({ loginLabel: '', loginEnabled: false });
 	const saml = ref({ loginLabel: '', loginEnabled: false });
+	const oidc = ref({ loginEnabled: false, loginUrl: '', callbackUrl: '' });
 	const mfa = ref({ enabled: false });
 	const folders = ref({ enabled: false });
 
@@ -93,6 +95,10 @@ export const useSettingsStore = defineStore(STORES.SETTINGS, () => {
 	const ldapLoginLabel = computed(() => ldap.value.loginLabel);
 
 	const isSamlLoginEnabled = computed(() => saml.value.loginEnabled);
+
+	const isOidcLoginEnabled = computed(() => oidc.value.loginEnabled);
+
+	const oidcCallBackUrl = computed(() => oidc.value.callbackUrl);
 
 	const isAiAssistantEnabled = computed(() => settings.value.aiAssistant?.enabled);
 
@@ -180,6 +186,10 @@ export const useSettingsStore = defineStore(STORES.SETTINGS, () => {
 		() => userManagement.value.authenticationMethod === UserManagementAuthenticationMethod.Saml,
 	);
 
+	const isDefaultAuthenticationOidc = computed(
+		() => userManagement.value.authenticationMethod === UserManagementAuthenticationMethod.Oidc,
+	);
+
 	const permanentlyDismissedBanners = computed(() => settings.value.banners?.dismissed ?? []);
 
 	const isBelowUserQuota = computed(
@@ -191,8 +201,6 @@ export const useSettingsStore = defineStore(STORES.SETTINGS, () => {
 	const isCommunityPlan = computed(() => planName.value.toLowerCase() === 'community');
 
 	const isDevRelease = computed(() => settings.value.releaseChannel === 'dev');
-
-	const isNewLogsEnabled = computed(() => !!settings.value.logsView?.enabled);
 
 	const setSettings = (newSettings: FrontendSettings) => {
 		settings.value = newSettings;
@@ -209,6 +217,12 @@ export const useSettingsStore = defineStore(STORES.SETTINGS, () => {
 		if (settings.value.sso?.saml) {
 			saml.value.loginEnabled = settings.value.sso.saml.loginEnabled;
 			saml.value.loginLabel = settings.value.sso.saml.loginLabel;
+		}
+
+		if (settings.value.sso?.oidc) {
+			oidc.value.loginEnabled = settings.value.sso.oidc.loginEnabled;
+			oidc.value.loginUrl = settings.value.sso.oidc.loginUrl || '';
+			oidc.value.callbackUrl = settings.value.sso.oidc.callbackUrl || '';
 		}
 
 		mfa.value.enabled = settings.value.mfa?.enabled;
@@ -334,7 +348,7 @@ export const useSettingsStore = defineStore(STORES.SETTINGS, () => {
 	const submitContactInfo = async (email: string) => {
 		try {
 			const usersStore = useUsersStore();
-			return await settingsApi.submitContactInfo(
+			return await promptsApi.submitContactInfo(
 				settings.value.instanceId,
 				usersStore.currentUserId || '',
 				email,
@@ -365,7 +379,7 @@ export const useSettingsStore = defineStore(STORES.SETTINGS, () => {
 		return await ldapApi.testLdapConnection(rootStore.restApiContext);
 	};
 
-	const updateLdapConfig = async (ldapConfig: ILdapConfig) => {
+	const updateLdapConfig = async (ldapConfig: LdapConfig) => {
 		const rootStore = useRootStore();
 		return await ldapApi.updateLdapConfig(rootStore.restApiContext, ldapConfig);
 	};
@@ -421,6 +435,7 @@ export const useSettingsStore = defineStore(STORES.SETTINGS, () => {
 		isLdapLoginEnabled,
 		ldapLoginLabel,
 		isSamlLoginEnabled,
+		isOidcLoginEnabled,
 		showSetupPage,
 		deploymentType,
 		isCloudDeployment,
@@ -445,6 +460,7 @@ export const useSettingsStore = defineStore(STORES.SETTINGS, () => {
 		isMultiMain,
 		isWorkerViewAvailable,
 		isDefaultAuthenticationSaml,
+		isDefaultAuthenticationOidc,
 		workflowCallerPolicyDefaultOption,
 		permanentlyDismissedBanners,
 		isBelowUserQuota,
@@ -456,8 +472,9 @@ export const useSettingsStore = defineStore(STORES.SETTINGS, () => {
 		isAskAiEnabled,
 		isAiCreditsEnabled,
 		aiCreditsQuota,
-		isNewLogsEnabled,
 		experimental__minZoomNodeSettingsInCanvas,
+		partialExecutionVersion,
+		oidcCallBackUrl,
 		reset,
 		testLdapConnection,
 		getLdapConfig,
@@ -472,6 +489,5 @@ export const useSettingsStore = defineStore(STORES.SETTINGS, () => {
 		getSettings,
 		setSettings,
 		initialize,
-		partialExecutionVersion,
 	};
 });
